@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 VOLUME_NAME_PREFIX=middleman-docker
 BUNDLER_VOLUME_NAME="${VOLUME_NAME_PREFIX}-bundler"

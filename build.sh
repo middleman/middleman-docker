@@ -1,5 +1,8 @@
 #!/bin/sh
 
-MIDDLEMAN_VERSION=4.3.0.rc.3
+MIDDLEMAN_VERSION=$1
 
-docker build . -t middleman/middleman:"$MIDDLEMAN_VERSION" --build-arg MIDDLEMAN_VERSION="$MIDDLEMAN_VERSION"
+docker build . \
+  -t middleman/middleman:"$MIDDLEMAN_VERSION" \
+  -t middleman/middleman:latest \
+  --build-arg MIDDLEMAN_VERSION="$MIDDLEMAN_VERSION"

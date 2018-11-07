@@ -1,32 +1,43 @@
 #!/bin/sh
 
-VERSION="4.3.0.rc.3"
-VOLUME=middleman-bundler-"$VERSION"
+VOLUME_NAME=middleman-docker
 
-if ! docker volume ls | grep -q "$VOLUME"
-then
-  docker volume create "$VOLUME"
-fi
-
-if [ $1 == "init" ]; then
+bundle_install() {
   docker run \
     --mount type=bind,source="$(pwd)",target=/app \
-    --mount source="$VOLUME",target=/usr/local/bundle \
+    --mount type=volume,source="$VOLUME_NAME",target=/usr/local/bundle \
     --rm \
-    middleman/middleman:"$VERSION" \
-    middleman "$@"
+    middleman/middleman:"$MIDDLEMAN_CONTAINER_VERSION" \
+    bundle install
+}
+
+prepare_volume()
+{
+  if ! docker volume ls | grep -q "$VOLUME_NAME"
+  then
+    docker volume create "$VOLUME_NAME"
+  fi
+}
+
+CMD=${1:-server}
+MIDDLEMAN_CONTAINER_VERSION=${MIDDLEMAN_CONTAINER_VERSION:-latest}
+
+if [ $CMD == "init" ]; then
+  docker run \
+    --mount type=bind,source="$(pwd)",target=/app \
+    --rm \
+    middleman/middleman:"$MIDDLEMAN_CONTAINER_VERSION" \
+    middleman "$@" --skip-bundle \
+  && prepare_volume \
+  && bundle_install
 else
-  docker run \
-    --mount type=bind,source="$(pwd)",target=/app \
-    --mount source="$VOLUME",target=/usr/local/bundle \
-    --rm \
-    middleman/middleman:"$VERSION" \
-    bundle install \
+  prepare_volume \
+  && bundle_install \
   && docker run \
     --mount type=bind,source="$(pwd)",target=/app \
-    --mount source="$VOLUME",target=/usr/local/bundle \
+    --mount type=volume,source="$VOLUME_NAME",target=/usr/local/bundle \
     --rm \
     -p 4567:4567 \
-    middleman/middleman:"$VERSION" \
+    middleman/middleman:"$MIDDLEMAN_CONTAINER_VERSION" \
     bundle exec middleman "$@"
 fi

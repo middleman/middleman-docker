@@ -1,42 +1,56 @@
-#!/bin/sh
+#!/bin/bash
 
-VOLUME_NAME=middleman-docker
+VOLUME_NAME_PREFIX=middleman-docker
+BUNDLER_VOLUME_NAME="${VOLUME_NAME_PREFIX}-bundler"
+SASS_CACHE_VOLUME_NAME="${VOLUME_NAME_PREFIX}-sass-cache"
 
-bundle_install() {
+bundler() {
   docker run \
     --mount type=bind,source="$(pwd)",target=/app \
-    --mount type=volume,source="$VOLUME_NAME",target=/usr/local/bundle \
+    --mount type=volume,source="$BUNDLER_VOLUME_NAME",target=/usr/local/bundle \
     --rm \
+    -it \
     middleman/middleman:"$MIDDLEMAN_CONTAINER_VERSION" \
-    bundle install
+    bundle $@
 }
 
 prepare_volume()
 {
-  if ! docker volume ls | grep -q "$VOLUME_NAME"
+  if ! docker volume ls | grep -q "$BUNDLER_VOLUME_NAME"
   then
-    docker volume create "$VOLUME_NAME"
+    docker volume create "$BUNDLER_VOLUME_NAME"
+  fi
+
+  if ! docker volume ls | grep -q "$SASS_CACHE_VOLUME_NAME"
+  then
+    docker volume create "$SASS_CACHE_VOLUME_NAME"
   fi
 }
 
 CMD=${1:-server}
 MIDDLEMAN_CONTAINER_VERSION=${MIDDLEMAN_CONTAINER_VERSION:-latest}
 
-if [ $CMD == "init" ]; then
+if [[ $CMD == bundle:* ]]; then
+  BUNDLER_CMD=${CMD#"bundle:"}
+  shift
+
+  prepare_volume \
+  && bundler $BUNDLER_CMD $@
+elif [ $CMD == "init" ]; then
   docker run \
     --mount type=bind,source="$(pwd)",target=/app \
     --rm \
+    -it \
     middleman/middleman:"$MIDDLEMAN_CONTAINER_VERSION" \
-    middleman "$@" --skip-bundle \
-  && prepare_volume \
-  && bundle_install
+    middleman "$@" --skip-bundle
 else
-  prepare_volume \
-  && bundle_install \
-  && docker run \
+  docker run \
     --mount type=bind,source="$(pwd)",target=/app \
-    --mount type=volume,source="$VOLUME_NAME",target=/usr/local/bundle \
+    --mount type=volume,source="${BUNDLER_VOLUME_NAME}",target=/usr/local/bundle \
+    --mount type=volume,source="${SASS_CACHE_VOLUME_NAME}",target=/sass-cache \
+    -e SASS_CACHE_LOCATION='/sass-cache' \
     --rm \
+    -it \
     -p 4567:4567 \
     middleman/middleman:"$MIDDLEMAN_CONTAINER_VERSION" \
     bundle exec middleman "$@"

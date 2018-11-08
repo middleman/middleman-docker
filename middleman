@@ -39,6 +39,7 @@ if [[ $CMD == bundle:* ]]; then
 elif [ $CMD == "init" ]; then
   docker run \
     --mount type=bind,source="$(pwd)",target=/app \
+    -e CONTRACTS='false' \
     --rm \
     -it \
     middleman/middleman:"$MIDDLEMAN_CONTAINER_VERSION" \
@@ -49,6 +50,7 @@ else
     --mount type=volume,source="${BUNDLER_VOLUME_NAME}",target=/usr/local/bundle \
     --mount type=volume,source="${SASS_CACHE_VOLUME_NAME}",target=/sass-cache \
     -e SASS_CACHE_LOCATION='/sass-cache' \
+    -e CONTRACTS='false' \
     --rm \
     -it \
     -p 4567:4567 \

@@ -1,0 +1,22 @@
+{
+  "name": "middleman-docker",
+  "version": "0.0.2",
+  "description": "CLI for using Middleman in a Docker container",
+  "main": "index.js",
+  "bin": {
+    "middleman-docker": "./middleman.sh"
+  },
+  "files": [
+    "middleman.sh"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/middleman/middleman-docker.git"
+  },
+  "author": "Thomas Reynolds",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/middleman/middleman-docker/issues"
+  },
+  "homepage": "https://github.com/middleman/middleman-docker#readme"
+}
